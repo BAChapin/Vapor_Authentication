@@ -61,6 +61,15 @@ extension User {
     }
 }
 
+extension User: ModelAuthenticatable {
+    static var usernameKey = \User.$email
+    static var passwordHashKey = \User.$passwordHash
+    
+    func verify(password: String) throws -> Bool {
+        try Bcrypt.verify(password, created: self.passwordHash)
+    }
+}
+
 extension User.Create: Validatable {
     static func validations(_ validations: inout Validations) {
         validations.add("name", as: String.self, is: !.empty)

@@ -11,8 +11,10 @@ struct UserController: RouteCollection {
     
     func boot(routes: RoutesBuilder) throws {
         let users = routes.grouped("user")
+        let passwordProtected = routes.grouped(User.authenticator())
         
         users.post(use: user)
+        passwordProtected.post("login", use: login)
     }
     
     func user(_ req: Request) throws -> EventLoopFuture<User> {
@@ -29,6 +31,10 @@ struct UserController: RouteCollection {
         let user = try User(name: create.name, email: create.email, passwordHash: Bcrypt.hash(create.password))
         
         return user.save(on: req.db).map { user }
+    }
+    
+    func login(_ req: Request) throws -> User {
+        try req.auth.require(User.self)
     }
     
 }
