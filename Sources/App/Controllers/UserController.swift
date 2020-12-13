@@ -12,9 +12,11 @@ struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let users = routes.grouped("user")
         let passwordProtected = routes.grouped(User.authenticator())
+        let tokenProtected = routes.grouped(UserToken.authenticator())
         
         users.post(use: user)
         passwordProtected.post("login", use: login)
+        tokenProtected.get("me", use: me)
     }
     
     func user(_ req: Request) throws -> EventLoopFuture<User> {
@@ -33,7 +35,13 @@ struct UserController: RouteCollection {
         return user.save(on: req.db).map { user }
     }
     
-    func login(_ req: Request) throws -> User {
+    func login(_ req: Request) throws -> EventLoopFuture<UserToken> {
+        let user = try req.auth.require(User.self)
+        let token = try user.generateToken()
+        return token.save(on: req.db).map { token }
+    }
+    
+    func me(_ req: Request) throws -> User {
         try req.auth.require(User.self)
     }
     

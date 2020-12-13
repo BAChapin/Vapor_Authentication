@@ -12,6 +12,7 @@ public func configure(_ app: Application) throws {
     app.databases.use(.postgres(hostname: "localhost", username: "postgres", password: "", database: "authenticationtest"), as: .psql)
     
     app.migrations.add(User.Migration())
+    app.migrations.add(UserToken.Migration())
 
     // register routes
     try routes(app)
